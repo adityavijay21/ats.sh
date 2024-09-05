@@ -7,6 +7,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 MAGENTA='\033[0;35m'
 CYAN='\033[0;36m'
+WHITE='\033[1;37m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
 
@@ -163,6 +164,42 @@ check_keyword_density() {
     echo $score
 }
 
+# Function to display banner and ATS score
+display_banner_and_score() {
+    clear
+    print_color "CYAN" "
+██████╗ ███████╗███████╗██╗  ██╗██╗   ██╗███╗   ███╗███████╗
+██╔══██╗██╔════╝██╔════╝╚██╗██╔╝██║   ██║████╗ ████║██╔════╝
+██████╔╝█████╗  ███████╗ ╚███╔╝ ██║   ██║██╔████╔██║█████╗  
+██╔══██╗██╔══╝  ╚════██║ ██╔██╗ ██║   ██║██║╚██╔╝██║██╔══╝  
+██║  ██║███████╗███████║██╔╝ ██╗╚██████╔╝██║ ╚═╝ ██║███████╗
+╚═╝  ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝
+                                                            
+     ███████╗██╗  ██╗██████╗ ███████╗██████╗ ████████╗     
+     ██╔════╝╚██╗██╔╝██╔══██╗██╔════╝██╔══██╗╚══██╔══╝     
+     ███████╗ ╚███╔╝ ██████╔╝█████╗  ██████╔╝   ██║       
+     ╚════██║ ██╔██╗ ██╔═══╝ ██╔══╝  ██╔══██╗   ██║       
+     ███████║██╔╝ ██╗██║     ███████╗██║  ██║   ██║       
+     ╚══════╝╚═╝  ╚═╝╚═╝     ╚══════╝╚═╝  ╚═╝   ╚═╝        
+"
+    print_color "WHITE" "                 Advanced Resume Optimization for Applicant Tracking Systems"
+    print_color "WHITE" "                 ========================================================"
+    echo
+    print_color "MAGENTA" "                          ${BOLD}ATS Friendliness Score: $1/100${NC}"
+    echo
+    print_color "YELLOW" "Type 'report' for a detailed analysis or 'exit' to quit:"
+}
+
+# Function to get user confirmation
+get_user_confirmation() {
+    read -p "Do you want to proceed with the analysis? (y/n): " response
+    case $response in
+        [Yy]* ) ;;
+        [Nn]* ) exit 0 ;;
+        * ) print_color "RED" "Please answer yes or no." ; exit 1 ;;
+    esac
+}
+
 # Main script
 if [ $# -lt 2 ]; then
     print_color "RED" "Usage: $0 <resume_file> <job_keywords>"
@@ -188,53 +225,74 @@ total_score=$((format_score + ats_score + keyword_score))
 # Normalize score to 100
 total_score=$((total_score * 100 / 150))
 
-print_color "MAGENTA" "\n${BOLD}ATS Friendliness Score: $total_score/100${NC}"
+display_banner_and_score "$total_score"
 
-if [ $total_score -ge 80 ]; then
-    print_color "GREEN" "Great job! Your resume appears to be very ATS-friendly."
-elif [ $total_score -ge 60 ]; then
-    print_color "YELLOW" "Your resume is somewhat ATS-friendly, but there's room for improvement."
-else
-    print_color "RED" "Your resume may not be very ATS-friendly. Consider making some improvements."
-fi
+while true; do
+    read -p "> " command
+    case $command in
+        report)
+            print_color "BLUE" "\n${BOLD}Detailed ATS Analysis Report:${NC}"
+            
+            if [ $total_score -ge 80 ]; then
+                print_color "GREEN" "Overall: Great job! Your resume appears to be very ATS-friendly."
+            elif [ $total_score -ge 60 ]; then
+                print_color "YELLOW" "Overall: Your resume is somewhat ATS-friendly, but there's room for improvement."
+            else
+                print_color "RED" "Overall: Your resume may not be very ATS-friendly. Consider making some improvements."
+            fi
 
-print_color "BLUE" "\n${BOLD}Detailed Recommendations:${NC}"
+            print_color "CYAN" "\n${BOLD}Strengths:${NC}"
+            # Add logic to list strengths based on checks
 
-if [ $format_score -lt 8 ]; then
-    print_color "YELLOW" "• Consider saving your resume as a PDF file for better ATS compatibility."
-fi
-if [[ ! "$content" =~ [0-9]{3}[-.]?[0-9]{3}[-.]?[0-9]{4} ]]; then
-    print_color "RED" "• Make sure your phone number is clearly visible on your resume."
-fi
-if [[ ! "$content" =~ [A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4} ]]; then
-    print_color "RED" "• Include your email address prominently on your resume."
-fi
-if [[ ! "$content" =~ linkedin\.com/in/[A-Za-z0-9-]+ ]]; then
-    print_color "YELLOW" "• Consider adding your LinkedIn profile URL to your resume."
-fi
+            print_color "YELLOW" "\n${BOLD}Areas for Improvement:${NC}"
+            if [ $format_score -lt 8 ]; then
+                print_color "YELLOW" "• Consider saving your resume as a PDF file for better ATS compatibility."
+            fi
+            if [[ ! "$content" =~ [0-9]{3}[-.]?[0-9]{3}[-.]?[0-9]{4} ]]; then
+                print_color "RED" "• Make sure your phone number is clearly visible on your resume."
+            fi
+            if [[ ! "$content" =~ [A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4} ]]; then
+                print_color "RED" "• Include your email address prominently on your resume."
+            fi
+            if [[ ! "$content" =~ linkedin\.com/in/[A-Za-z0-9-]+ ]]; then
+                print_color "YELLOW" "• Consider adding your LinkedIn profile URL to your resume."
+            fi
+            local headers=("Experience" "Education" "Skills" "Projects" "Certifications" "Summary" "Objective")
+            for header in "${headers[@]}"; do
+                if [[ ! "$content" =~ $header ]]; then
+                    print_color "YELLOW" "• Consider adding a '$header' section to your resume."
+                fi
+            done
+            if [[ ! "$content" =~ [•·-] ]]; then
+                print_color "RED" "• Use bullet points to highlight key achievements and responsibilities."
+            fi
+            line_count=$(echo "$content" | wc -l)
+            if [ $line_count -lt 40 ] || [ $line_count -gt 180 ]; then
+                print_color "YELLOW" "• Aim for a resume length of about 1-2 pages (40-180 lines in this check)."
+            fi
+            if [[ ! "$content" =~ [0-9]+% ]] && [[ ! "$content" =~ \$[0-9]+ ]]; then
+                print_color "RED" "• Try to include more quantifiable achievements (e.g., percentages, dollar amounts)."
+            fi
 
-local headers=("Experience" "Education" "Skills" "Projects" "Certifications" "Summary" "Objective")
-for header in "${headers[@]}"; do
-    if [[ ! "$content" =~ $header ]]; then
-        print_color "YELLOW" "• Consider adding a '$header' section to your resume."
-    fi
+            print_color "MAGENTA" "\n${BOLD}Keyword Analysis:${NC}"
+            check_keyword_density "$content" "$job_keywords"
+
+            print_color "GREEN" "\n${BOLD}Next Steps:${NC}"
+            print_color "GREEN" "1. Address the areas for improvement mentioned above."
+            print_color "GREEN" "2. Tailor your resume for each job application."
+            print_color "GREEN" "3. Use industry-specific terminology relevant to the job."
+            print_color "GREEN" "4. Ensure your resume is free of spelling and grammatical errors."
+            print_color "GREEN" "5. Keep formatting simple and consistent throughout the document."
+
+            echo
+            print_color "YELLOW" "Type 'report' to see this analysis again or 'exit' to quit:"
+            ;;
+        exit)
+            print_color "CYAN" "Thank you for using RESXUME ATS Expert! Good luck with your job search!"
+            exit 0
+            ;;
+        *)
+            print_color "RED" "Invalid command. Type 'report' for the detailed analysis or 'exit' to quit."
+            ;;
+    esac
 done
-
-if [[ ! "$content" =~ [•·-] ]]; then
-    print_color "RED" "• Use bullet points to highlight key achievements and responsibilities."
-fi
-
-line_count=$(echo "$content" | wc -l)
-if [ $line_count -lt 40 ] || [ $line_count -gt 180 ]; then
-    print_color "YELLOW" "• Aim for a resume length of about 1-2 pages (40-180 lines in this check)."
-fi
-
-if [[ ! "$content" =~ [0-9]+% ]] && [[ ! "$content" =~ \$[0-9]+ ]]; then
-    print_color "RED" "• Try to include more quantifiable achievements (e.g., percentages, dollar amounts)."
-fi
-
-print_color "CYAN" "\n${BOLD}Final Tips:${NC}"
-print_color "CYAN" "• Tailor your resume for each job application."
-print_color "CYAN" "• Use industry-specific terminology relevant to the job."
-print_color "CYAN" "• Ensure your resume is free of spelling and grammatical errors."
-print_color "CYAN" "• Keep formatting simple and consistent throughout the document."
